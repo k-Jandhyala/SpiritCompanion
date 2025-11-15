@@ -1,7 +1,8 @@
 import os
 import sys
+import json
 from typing import Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +17,14 @@ backend_spec = importlib.util.spec_from_file_location("backend_main", os.path.jo
 backend_main = importlib.util.module_from_spec(backend_spec)
 backend_spec.loader.exec_module(backend_main)
 get_gemini_response = backend_main.get_gemini_response
+
+# Import NotificationSender for WebSocket management
+notification_sender_spec = importlib.util.spec_from_file_location(
+    "notification_sender", 
+    os.path.join(backend_path, "NotificationSender.py")
+)
+notification_sender = importlib.util.module_from_spec(notification_sender_spec)
+notification_sender_spec.loader.exec_module(notification_sender)
 
 app = FastAPI(title="Gemini Test API")
 
@@ -54,6 +63,45 @@ async def process_query(request: QueryRequest):
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# WebSocket endpoint for notifications
+@app.websocket("/ws/notifications")
+async def websocket_notifications(websocket: WebSocket):
+    """
+    WebSocket endpoint for receiving notifications from the backend.
+    The frontend connects to this endpoint to receive real-time notifications.
+    """
+    await websocket.accept()
+    notification_sender.register_websocket(websocket)
+    
+    try:
+        # Keep connection alive and handle incoming messages
+        while True:
+            # Wait for any message from client (ping/pong for keepalive)
+            data = await websocket.receive_text()
+            try:
+                message = json.loads(data)
+                # Handle ping messages
+                if message.get('type') == 'ping':
+                    await websocket.send_text(json.dumps({'type': 'pong'}))
+            except json.JSONDecodeError:
+                # If not JSON, just ignore (could be plain text)
+                pass
+    except WebSocketDisconnect:
+        notification_sender.unregister_websocket(websocket)
+        print("WebSocket client disconnected")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        notification_sender.unregister_websocket(websocket)
+
+# Endpoint to check notification connection status
+@app.get("/api/notifications/status")
+async def get_notification_status():
+    """Get the status of notification connections."""
+    return {
+        "connected": notification_sender.has_connections(),
+        "connection_count": notification_sender.get_connection_count()
+    }
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
