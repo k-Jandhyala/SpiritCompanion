@@ -142,7 +142,39 @@
         </div>
     </div>
 
+    <!-- Notification Utilities -->
+    <script src="/notification-utils.js"></script>
+    
     <script>
+        // Initialize notifications on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize notification manager
+            if (window.NotificationManager) {
+                try {
+                    await window.NotificationManager.initialize();
+                    console.log('Notification manager initialized');
+                    
+                    // Request permission if not already granted
+                    const permission = window.NotificationManager.getPermission();
+                    if (permission === 'default') {
+                        // Optionally request permission automatically or show a button
+                        // For now, we'll request it automatically
+                        await window.NotificationManager.requestPermission();
+                    }
+                } catch (error) {
+                    console.error('Error initializing notifications:', error);
+                }
+            }
+
+            await window.NotificationManager.sendNotification('Test Notification', {
+                body: 'This is a test notification.',
+                tag: 'test-notification',
+                data: { message: 'This is a test notification.' }
+            });
+
+            console.log('Notification sent');
+        });
+
         async function submitQuery() {
             const query = document.getElementById('queryInput').value.trim();
             const output = document.getElementById('output');
@@ -173,13 +205,52 @@
                 if (response.ok) {
                     output.textContent = data.response;
                     output.className = 'output-box';
+                    
+                    // Send a notification when query is successfully processed
+                    if (window.sendNotification) {
+                        try {
+                            await window.sendNotification('Query Processed', {
+                                body: 'Your query has been successfully processed!',
+                                tag: 'query-success',
+                                data: { query: query }
+                            });
+                        } catch (notifError) {
+                            console.log('Could not send notification:', notifError);
+                        }
+                    }
                 } else {
                     output.textContent = 'Error: ' + (data.detail || data.error || 'Unknown error occurred');
                     output.className = 'output-box error';
+                    
+                    // Send error notification
+                    if (window.sendNotification) {
+                        try {
+                            await window.sendNotification('Query Error', {
+                                body: 'An error occurred while processing your query.',
+                                tag: 'query-error',
+                                data: { error: data.detail || data.error }
+                            });
+                        } catch (notifError) {
+                            console.log('Could not send notification:', notifError);
+                        }
+                    }
                 }
             } catch (error) {
                 output.textContent = 'Error: Failed to connect to server. Make sure the Python backend is running.\n\n' + error.message;
                 output.className = 'output-box error';
+                
+                // Send connection error notification
+                if (window.sendNotification) {
+                    try {
+                        await window.sendNotification('Connection Error', {
+                            body: 'Failed to connect to server. Make sure the backend is running.',
+                            tag: 'connection-error',
+                            data: { error: error.message }
+                        });
+                    } catch (notifError) {
+                        console.log('Could not send notification:', notifError);
+                    }
+                }
             } finally {
                 submitBtn.disabled = false;
             }
