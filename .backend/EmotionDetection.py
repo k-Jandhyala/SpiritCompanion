@@ -2,9 +2,9 @@ import cv2
 from deepface import DeepFace
 from collections import Counter, deque
 
-# ---------------- CONFIG ----------------
+# ---------------- CONFIG ---------------- 
 # Your 5 emotions
-emotion_counts = {"angry":0, "stressed":0, "happy":0, "sad":0, "focused":0}
+emotion_counts = {"angry":0, "stressed":0,"happy":0, "sad":0, "focused":0}
 WINDOW_SIZE = 5
 emotion_window = deque(maxlen=WINDOW_SIZE)
 
