@@ -4,6 +4,8 @@ from deepface import DeepFace
 from ultralytics import YOLO
 from collections import Counter, deque
 import csv
+import sqlite3
+import os
 
 # ---------------- CONFIG ----------------
 emotion_counts = {
@@ -125,17 +127,63 @@ cap.release()
 cv2.destroyAllWindows()
 print("\nFinal results:", emotion_counts)
 
-with open("Memory.csv","r") as ob:
-    currentData=[]
-    k=csv.reader(ob)
-    for i in k:
-        currentData.append(i)
+# ---------------- CONFIG ----------------
+DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Memory.db")
 
-currentData.insert(0,list(emotion_counts.values()))
+# Create DB and table if not exists
+conn = sqlite3.connect(DB_FILE)
+cursor = conn.cursor()
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    angry INTEGER,
+    stressed INTEGER,
+    happy INTEGER,
+    sad INTEGER,
+    focused INTEGER,
+    distractions INTEGER
+)
+''')
+conn.commit()
 
-if len(currentData)>5:
-    currentData.pop(5)
+# ---------------- SAVE CURRENT SESSION ----------------
+cursor.execute('''
+INSERT INTO sessions (angry, stressed, happy, sad, focused, distractions)
+VALUES (?, ?, ?, ?, ?, ?)
+''', (
+    emotion_counts["angry"],
+    emotion_counts["stressed"],
+    emotion_counts["happy"],
+    emotion_counts["sad"],
+    emotion_counts["focused"],
+    emotion_counts["distractions"]
+))
+conn.commit()
 
-with open("Memory.csv","w",newline="") as ob:
-    k=csv.writer(ob)
-    k.writerows(currentData)
+# ---------------- KEEP ONLY LAST 5 SESSIONS ----------------
+cursor.execute('SELECT COUNT(*) FROM sessions')
+count = cursor.fetchone()[0]
+if count > 5:
+    # Delete oldest sessions beyond 5
+    cursor.execute('''
+    DELETE FROM sessions WHERE id IN (
+        SELECT id FROM sessions ORDER BY id ASC LIMIT ?
+    )
+    ''', (count - 5,))
+    conn.commit()
+
+# ---------------- PRINT LAST 5 SESSIONS (NEWEST FIRST) ----------------
+cursor.execute('''
+SELECT angry, stressed, happy, sad, focused, distractions
+FROM sessions
+ORDER BY id DESC
+LIMIT 5
+''')
+rows = cursor.fetchall()
+print("\nLast 5 sessions (newest first):")
+for i, row in enumerate(rows, 1):
+    print(f"Session {i}: Angry={row[0]}, Stressed={row[1]}, Happy={row[2]}, Sad={row[3]}, Focused={row[4]}, Distractions={row[5]}")
+
+conn.close()
+
+print("Session saved to database:", DB_FILE)
