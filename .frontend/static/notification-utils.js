@@ -68,47 +68,68 @@ class NotificationManager {
         const wsUrl = `${protocol}//${host}/ws/notifications`;
 
         try {
+            console.log('🔌 Attempting to connect WebSocket to:', wsUrl);
             this.websocket = new WebSocket(wsUrl);
 
             this.websocket.onopen = () => {
-                console.log('WebSocket connected for notifications');
+                console.log('✅ WebSocket connected for notifications');
                 this.websocketConnected = true;
                 this.reconnectAttempts = 0;
                 
                 // Send a ping to keep connection alive
                 this.startWebSocketPing();
-            };
-
-            this.websocket.onmessage = (event) => {
+                
+                // Send initial ping to verify connection
                 try {
-                    const data = JSON.parse(event.data);
-                    
-                    // Handle notification messages from backend
-                    if (data.type === 'NOTIFICATION') {
-                        this.handleBackendNotification(data);
-                    }
-                } catch (error) {
-                    console.error('Error parsing WebSocket message:', error);
+                    this.websocket.send(JSON.stringify({ type: 'ping' }));
+                } catch (e) {
+                    console.error('Error sending initial ping:', e);
                 }
             };
 
             this.websocket.onerror = (error) => {
-                console.error('WebSocket error:', error);
+                console.error('❌ WebSocket error:', error);
+                console.error('WebSocket URL was:', wsUrl);
+                console.error('WebSocket readyState:', this.websocket?.readyState);
                 this.websocketConnected = false;
             };
 
-            this.websocket.onclose = () => {
-                console.log('WebSocket disconnected');
+            this.websocket.onclose = (event) => {
+                console.log('❌ WebSocket disconnected', {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                });
                 this.websocketConnected = false;
                 this.stopWebSocketPing();
                 
                 // Attempt to reconnect
                 if (this.reconnectAttempts < this.maxReconnectAttempts) {
                     this.reconnectAttempts++;
-                    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+                    console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
                     setTimeout(() => this.connectWebSocket(), this.reconnectDelay);
                 } else {
-                    console.error('Max reconnection attempts reached');
+                    console.error('❌ Max reconnection attempts reached');
+                }
+            };
+            
+            this.websocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    // Handle pong responses
+                    if (data.type === 'pong') {
+                        console.log('📨 Received pong from server');
+                        return;
+                    }
+                    
+                    // Handle notification messages from backend
+                    if (data.type === 'NOTIFICATION') {
+                        console.log('📬 Received notification from backend:', data);
+                        this.handleBackendNotification(data);
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
                 }
             };
         } catch (error) {

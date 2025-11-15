@@ -20,11 +20,31 @@ Usage:
 
 import asyncio
 import json
+import threading
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 # Global WebSocket connections manager
 _websocket_connections = set()
+# Global event loop reference for thread-based notifications
+_main_event_loop = None
+
+
+def set_event_loop(loop):
+    """Set the main event loop for sending notifications from threads."""
+    global _main_event_loop
+    _main_event_loop = loop
+
+
+def get_event_loop():
+    """Get the main event loop, or try to get/create one."""
+    global _main_event_loop
+    if _main_event_loop is not None:
+        return _main_event_loop
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        return None
 
 
 def register_websocket(websocket):
@@ -166,30 +186,50 @@ def send_notification(
         )
     """
     try:
-        # Try to get the current event loop
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
+        # Try to get the main event loop (set by FastAPI)
+        loop = get_event_loop()
+        
+        if loop is not None and loop.is_running():
             # If loop is running, schedule the coroutine
-            asyncio.create_task(_send_notification_async(
-                title, body, tag, icon, badge, require_interaction, data, vibrate, actions
-            ))
+            asyncio.run_coroutine_threadsafe(
+                _send_notification_async(
+                    title, body, tag, icon, badge, require_interaction, data, vibrate, actions
+                ),
+                loop
+            )
             return True
-        else:
+        elif loop is not None:
             # If loop exists but not running, run the coroutine
             return loop.run_until_complete(_send_notification_async(
                 title, body, tag, icon, badge, require_interaction, data, vibrate, actions
             ))
-    except RuntimeError:
-        # No event loop exists, create a new one
-        try:
-            return asyncio.run(_send_notification_async(
-                title, body, tag, icon, badge, require_interaction, data, vibrate, actions
-            ))
-        except RuntimeError as e:
-            print(f"Error sending notification: {e}")
-            print("Note: If you're calling this from a synchronous context, "
-                  "consider using send_notification_async() instead")
-            return False
+        else:
+            # Try to get/create event loop in current thread
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.create_task(_send_notification_async(
+                        title, body, tag, icon, badge, require_interaction, data, vibrate, actions
+                    ))
+                    return True
+                else:
+                    return loop.run_until_complete(_send_notification_async(
+                        title, body, tag, icon, badge, require_interaction, data, vibrate, actions
+                    ))
+            except RuntimeError:
+                # No event loop exists, create a new one
+                try:
+                    return asyncio.run(_send_notification_async(
+                        title, body, tag, icon, badge, require_interaction, data, vibrate, actions
+                    ))
+                except RuntimeError as e:
+                    print(f"Error sending notification: {e}")
+                    print("Note: If you're calling this from a synchronous context, "
+                          "consider using send_notification_async() instead")
+                    return False
+    except Exception as e:
+        print(f"Error sending notification: {e}")
+        return False
 
 
 async def send_notification_async(
