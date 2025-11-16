@@ -55,6 +55,16 @@ async def startup_event():
     except Exception as e:
         print(f"Error setting event loop: {e}")
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop emotion detection and release camera when server shuts down."""
+    try:
+        print("🛑 Server shutting down, stopping emotion detection...")
+        stop_emotion_detection()
+        print("✅ Emotion detection stopped on server shutdown")
+    except Exception as e:
+        print(f"⚠️ Error stopping emotion detection on shutdown: {e}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # adjust for production
@@ -217,6 +227,58 @@ async def get_timer_state():
     """Get the current timer state for polling."""
     state = focus_reminders.get_timer_state()
     return state
+
+@app.get("/api/sessions")
+async def get_sessions():
+    """Get all session data from Memory.db for trends dashboard."""
+    try:
+        import sqlite3
+        import os
+        
+        # Get database path
+        backend_path = os.path.join(os.path.dirname(__file__), '..', '.backend')
+        db_file = os.path.join(backend_path, "Memory.db")
+        
+        if not os.path.exists(db_file):
+            return {
+                "sessions": [],
+                "message": "No sessions found"
+            }
+        
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        
+        # Get all sessions (not limited to 5)
+        cursor.execute('''
+        SELECT id, angry, stressed, happy, sad, focused, distractions
+        FROM sessions
+        ORDER BY id DESC
+        ''')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        # Format sessions data
+        sessions = []
+        for row in rows:
+            sessions.append({
+                "id": row[0],
+                "angry": row[1],
+                "stressed": row[2],
+                "happy": row[3],
+                "sad": row[4],
+                "focused": row[5],
+                "distractions": row[6]
+            })
+        
+        return {
+            "sessions": sessions,
+            "total": len(sessions)
+        }
+    except Exception as e:
+        print(f"Error fetching sessions: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint for video streaming
 @app.websocket("/ws/video")

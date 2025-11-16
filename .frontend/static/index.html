@@ -941,6 +941,11 @@
                                 stats.currentStreak++;
                                 updateStats();
                                 sendTimerNotification('🎉 Timer Complete!', `You've completed ${timerState.totalFocusSeconds} seconds of focused work! Great job!`);
+                                
+                                // Redirect to trends page after a short delay
+                                setTimeout(() => {
+                                    window.location.href = '/trends.html';
+                                }, 2000);
                             }
                             stopTimer();
                             return;
