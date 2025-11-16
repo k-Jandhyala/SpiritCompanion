@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potion Master's Focus Lab</title>
+    <title>Gemini Query Interface</title>
     <style>
         * {
             margin: 0;
@@ -11,519 +11,173 @@
             box-sizing: border-box;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-        
-        @keyframes bubble {
-            0% { transform: translateY(0) scale(0.8); opacity: 0.7; }
-            50% { transform: translateY(-30px) scale(1); opacity: 1; }
-            100% { transform: translateY(-60px) scale(0.6); opacity: 0; }
-        }
-        
-        @keyframes sparkle {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-        
         body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', cursive;
-            background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 50%, #34d399 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            position: relative;
-            overflow-x: hidden;
         }
-        
-        body::before {
-            content: '✨';
-            position: absolute;
-            font-size: 40px;
-            top: 10%;
-            left: 15%;
-            animation: sparkle 3s ease-in-out infinite;
-        }
-        
-        body::after {
-            content: '⭐';
-            position: absolute;
-            font-size: 35px;
-            top: 20%;
-            right: 15%;
-            animation: sparkle 2.5s ease-in-out infinite 0.5s;
-        }
-        
-        .sparkle {
-            position: absolute;
-            font-size: 25px;
-            animation: sparkle 2s ease-in-out infinite;
-        }
-        
-        .sparkle-1 { top: 60%; left: 10%; animation-delay: 0.3s; }
-        .sparkle-2 { top: 70%; right: 12%; animation-delay: 0.8s; }
-        .sparkle-3 { bottom: 15%; left: 20%; animation-delay: 1.2s; }
         
         .container {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 5px solid #f59e0b;
-            border-radius: 30px;
-            box-shadow: 
-                0 10px 40px rgba(245, 158, 11, 0.3),
-                inset 0 2px 10px rgba(255, 255, 255, 0.5);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 900px;
+            max-width: 800px;
             width: 100%;
-            position: relative;
-        }
-        
-        .potion-sprite {
-            position: absolute;
-            width: 50px;
-            height: 70px;
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .sprite-green-1 {
-            top: -25px;
-            left: 30px;
-            animation-delay: 0s;
-        }
-        
-        .sprite-red {
-            top: -25px;
-            right: 150px;
-            animation-delay: 0.5s;
-        }
-        
-        .sprite-blue {
-            top: -25px;
-            right: 30px;
-            animation-delay: 1s;
         }
         
         h1 {
-            color: #b45309;
-            margin-bottom: 5px;
+            color: #667eea;
+            margin-bottom: 30px;
             text-align: center;
-            font-size: 2.8em;
-            text-shadow: 3px 3px 0px #fbbf24;
-            letter-spacing: 2px;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #d97706;
-            font-style: italic;
-            margin-bottom: 25px;
-            font-size: 1.1em;
-        }
-        
-        .divider {
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(to right, transparent, #f59e0b, transparent);
-            margin: 25px 0;
-            position: relative;
-        }
-        
-        .divider::before {
-            content: '✦';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            background: #fef3c7;
-            padding: 0 10px;
-            color: #f59e0b;
-            font-size: 20px;
-        }
-        
-        /* Timer Section */
-        .timer-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .timer-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fef9e7 100%);
-            border: 4px solid #10b981;
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
-            position: relative;
-        }
-        
-        .timer-card::before {
-            content: '';
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 8px;
-            height: 8px;
-            background: #6ee7b7;
-            border-radius: 50%;
-            animation: bubble 2s ease-in-out infinite;
-        }
-        
-        .timer-card:hover {
-            transform: translateY(-5px);
-            border-color: #059669;
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-        }
-        
-        .timer-card.active {
-            border-color: #f59e0b;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
-            animation: bounce 1s ease-in-out infinite;
-        }
-        
-        .timer-icon {
             font-size: 2.5em;
-            margin-bottom: 5px;
-        }
-        
-        .timer-label {
-            color: #059669;
-            font-size: 1em;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
-        .timer-display {
-            color: #047857;
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .timer-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: 3px solid #047857;
-            padding: 8px 18px;
-            border-radius: 15px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: inherit;
-            margin: 3px;
-            font-weight: bold;
-            box-shadow: 0 3px 8px rgba(5, 150, 105, 0.3);
-        }
-        
-        .timer-btn:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(5, 150, 105, 0.5);
-        }
-        
-        .timer-btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Focus Stats */
-        .focus-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            border: 4px solid #3b82f6;
-            border-radius: 20px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
-        }
-        
-        .stat-icon {
-            font-size: 2em;
-            margin-bottom: 5px;
-        }
-        
-        .stat-value {
-            color: #1e40af;
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 0px rgba(147, 197, 253, 0.5);
-        }
-        
-        .stat-label {
-            color: #2563eb;
-            font-size: 0.9em;
-            font-weight: bold;
         }
         
         .input-group {
             margin-bottom: 20px;
-            position: relative;
         }
         
         label {
             display: block;
             margin-bottom: 10px;
-            color: #d97706;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
-        label::before {
-            content: '🔮 ';
+            color: #333;
+            font-weight: 600;
         }
         
         textarea {
             width: 100%;
             padding: 15px;
-            background: white;
-            border: 4px solid #f59e0b;
-            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
             font-family: inherit;
             resize: vertical;
-            min-height: 100px;
-            transition: all 0.3s;
-            color: #78350f;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        textarea::placeholder {
-            color: #d97706;
-            font-style: italic;
+            min-height: 120px;
+            transition: border-color 0.3s;
         }
         
         textarea:focus {
             outline: none;
-            border-color: #d97706;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), inset 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
         }
         
-        button.submit-btn {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: 4px solid #b45309;
-            padding: 18px 40px;
-            border-radius: 20px;
-            font-size: 20px;
-            font-weight: bold;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: all 0.3s;
-            font-family: inherit;
-            text-transform: uppercase;
-            box-shadow: 0 6px 15px rgba(217, 119, 6, 0.4);
-            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        button.submit-btn::before {
-            content: '✨';
-            position: absolute;
-            left: 30px;
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
         
-        button.submit-btn::after {
-            content: '✨';
-            position: absolute;
-            right: 30px;
-        }
-        
-        button.submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(217, 119, 6, 0.6);
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        }
-        
-        button.submit-btn:active {
+        button:active {
             transform: translateY(0);
         }
         
-        button.submit-btn:disabled {
+        button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
         
         .output-section {
-            margin-top: 25px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
         }
         
         .output-box {
-            background: white;
-            border: 4px solid #8b5cf6;
-            border-radius: 15px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             padding: 20px;
             min-height: 150px;
             white-space: pre-wrap;
             word-wrap: break-word;
             font-size: 15px;
-            line-height: 1.8;
-            color: #5b21b6;
-            font-family: inherit;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            line-height: 1.6;
+            color: #333;
         }
         
         .loading {
             text-align: center;
-            color: #8b5cf6;
+            color: #667eea;
             font-style: italic;
         }
         
-        .loading::before {
-            content: '✨ ';
-            animation: sparkle 1s ease-in-out infinite;
-        }
-        
-        .loading::after {
-            content: ' ✨';
-            animation: sparkle 1s ease-in-out infinite;
-        }
-        
         .error {
-            color: #dc2626;
-            background: #fee2e2;
-            border-color: #ef4444;
+            color: #e74c3c;
+            background: #fde8e8;
+            border-color: #e74c3c;
         }
         
-        @media (max-width: 768px) {
-            .timer-section, .focus-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .potion-sprite {
-                width: 40px;
-                height: 55px;
-            }
-            
-            .sprite-red { right: 100px; }
+        .timer-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timer-label {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .timer-status {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
+        }
+        
+        .timer-section.hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="sparkle sparkle-1">✨</div>
-    <div class="sparkle sparkle-2">⭐</div>
-    <div class="sparkle sparkle-3">💫</div>
-    
     <div class="container">
-        <!-- Potion Sprites -->
-        <svg class="potion-sprite sprite-green-1" viewBox="0 0 50 70">
-            <defs>
-                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#a7f3d0;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M 25 5 Q 20 8, 20 15 L 15 45 Q 15 60, 25 65 Q 35 60, 35 45 L 30 15 Q 30 8, 25 5 Z" fill="url(#greenGrad)" stroke="#34d399" stroke-width="2"/>
-            <ellipse cx="22" cy="35" rx="3" ry="4" fill="#34d399" opacity="0.7"/>
-            <ellipse cx="28" cy="35" rx="3" ry="4" fill="#34d399" opacity="0.7"/>
-        </svg>
-        
-        <svg class="potion-sprite sprite-red" viewBox="0 0 50 70">
-            <defs>
-                <linearGradient id="redGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#fca5a5;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M 25 5 Q 20 8, 20 15 L 15 45 Q 15 60, 25 65 Q 35 60, 35 45 L 30 15 Q 30 8, 25 5 Z" fill="url(#redGrad)" stroke="#dc2626" stroke-width="2"/>
-            <ellipse cx="22" cy="38" rx="3" ry="4" fill="#dc2626" opacity="0.7"/>
-            <ellipse cx="28" cy="38" rx="3" ry="4" fill="#dc2626" opacity="0.7"/>
-        </svg>
-        
-        <svg class="potion-sprite sprite-blue" viewBox="0 0 50 70">
-            <defs>
-                <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#93c5fd;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M 25 5 Q 20 8, 20 15 L 15 45 Q 15 60, 25 65 Q 35 60, 35 45 L 30 15 Q 30 8, 25 5 Z" fill="url(#blueGrad)" stroke="#2563eb" stroke-width="2"/>
-            <ellipse cx="22" cy="36" rx="2.5" ry="3.5" fill="#1e40af" opacity="0.7"/>
-            <ellipse cx="28" cy="36" rx="2.5" ry="3.5" fill="#1e40af" opacity="0.7"/>
-            <circle cx="22" cy="48" r="2" fill="#60a5fa" opacity="0.5"/>
-            <circle cx="28" cy="48" r="2" fill="#60a5fa" opacity="0.5"/>
-        </svg>
-        
-        <h1>🧪 Potion Master's Lab 🧙‍♀️</h1>
-        <div class="subtitle">~ Brew Your Focus & Mix Your Magic ~</div>
-        
-        <div class="divider"></div>
-        
-        <!-- Timer Section -->
-        <div class="timer-section">
-            <div class="timer-card" id="pomodoroCard">
-                <div class="timer-icon">🍄</div>
-                <div class="timer-label">Focus Potion</div>
-                <div class="timer-display" id="pomodoroDisplay">25:00</div>
-                <button class="timer-btn" onclick="startPomodoro()">Start</button>
-                <button class="timer-btn" onclick="resetTimer('pomodoro')">Reset</button>
-            </div>
-            
-            <div class="timer-card" id="shortBreakCard">
-                <div class="timer-icon">🌿</div>
-                <div class="timer-label">Quick Brew</div>
-                <div class="timer-display" id="shortBreakDisplay">05:00</div>
-                <button class="timer-btn" onclick="startShortBreak()">Start</button>
-                <button class="timer-btn" onclick="resetTimer('shortBreak')">Reset</button>
-            </div>
-            
-            <div class="timer-card" id="longBreakCard">
-                <div class="timer-icon">🌙</div>
-                <div class="timer-label">Rest Elixir</div>
-                <div class="timer-display" id="longBreakDisplay">15:00</div>
-                <button class="timer-btn" onclick="startLongBreak()">Start</button>
-                <button class="timer-btn" onclick="resetTimer('longBreak')">Reset</button>
-            </div>
-        </div>
-        
-        <!-- Focus Stats -->
-        <div class="focus-stats">
-            <div class="stat-card">
-                <div class="stat-icon">⚗️</div>
-                <div class="stat-value" id="completedPomodoros">0</div>
-                <div class="stat-label">Potions Brewed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏰</div>
-                <div class="stat-value" id="totalFocusTime">0h 0m</div>
-                <div class="stat-label">Time in Lab</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔥</div>
-                <div class="stat-value" id="currentStreak">0</div>
-                <div class="stat-label">Spell Streak</div>
-            </div>
-        </div>
-        
-        <div class="divider"></div>
+        <h1>Gemini Query Interface</h1>
         
         <div class="input-group">
-            <label for="queryInput">Ask the Magic Mirror</label>
-            <textarea id="queryInput" placeholder="What wisdom shall the mirror reveal?"></textarea>
+            <label for="queryInput">Enter your query:</label>
+            <textarea id="queryInput" placeholder="Ask me anything..."></textarea>
         </div>
         
-        <button class="submit-btn" id="submitBtn" onclick="submitQuery()">Cast Spell</button>
+        <button id="submitBtn" onclick="submitQuery()">Submit Query</button>
+        
+        <!-- Timer Display Section -->
+        <div id="timerSection" class="timer-section hidden">
+            <div class="timer-label" id="timerLabel">Focus Timer</div>
+            <div class="timer-display" id="timerDisplay">25:00</div>
+            <div class="timer-status" id="timerStatus">Timer will start when you submit a query</div>
+        </div>
         
         <div class="output-section">
-            <label>🔮 Mirror's Answer:</label>
-            <div id="output" class="output-box">The magic mirror awaits your question...</div>
+            <label>Gemini Response:</label>
+            <div id="output" class="output-box">Your response will appear here...</div>
         </div>
     </div>
 
@@ -531,13 +185,38 @@
     <script src="/notification-utils.js"></script>
     
     <script>
+        // Timer state
+        let timerState = {
+            isRunning: false,
+            phase: 'focus', // 'focus' or 'rest'
+            // All times in seconds
+            totalFocusSeconds: 0, // total focus time in seconds
+            breakDurationSeconds: 0, // break duration in seconds
+            focusIntervalSeconds: 0, // focus interval (how long each focus session lasts) in seconds
+            // Current phase remaining time (in seconds)
+            remaining: 0,
+            // Total focus time accumulated so far (in seconds)
+            totalFocusAccumulated: 0,
+            interval: null,
+            notificationsSent: {
+                timerStarted: false,
+                restStarting10s: false,
+                restStarted: false,
+                restEnding5s: false,
+                restEnded: false,
+                timerComplete: false
+            }
+        };
+        
         // Initialize notifications on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize notification manager
             if (window.NotificationManager) {
                 try {
                     await window.NotificationManager.initialize();
                     console.log('Notification manager initialized');
                     
+                    // Request permission if not already granted
                     const permission = window.NotificationManager.getPermission();
                     if (permission === 'default') {
                         await window.NotificationManager.requestPermission();
@@ -547,19 +226,6 @@
                 }
             }
         });
-
-        let timers = {
-            pomodoro: { duration: 25 * 60, remaining: 25 * 60, interval: null },
-            shortBreak: { duration: 5 * 60, remaining: 5 * 60, interval: null },
-            longBreak: { duration: 15 * 60, remaining: 15 * 60, interval: null }
-        };
-        
-        let activeTimer = null;
-        let stats = {
-            completedPomodoros: 0,
-            totalFocusTime: 0,
-            currentStreak: 0
-        };
         
         function formatTime(seconds) {
             const mins = Math.floor(seconds / 60);
@@ -567,86 +233,290 @@
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
         
-        function updateDisplay(type) {
-            const displayId = type + 'Display';
-            document.getElementById(displayId).textContent = formatTime(timers[type].remaining);
-        }
-        
-        async function sendTimerNotification(title, body) {
-            if (window.NotificationManager) {
-                try {
-                    await window.NotificationManager.sendNotification(title, {
-                        body: body,
-                        tag: 'timer-notification'
-                    });
-                } catch (error) {
-                    console.log('Could not send notification:', error);
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerLabel = document.getElementById('timerLabel');
+            const timerStatus = document.getElementById('timerStatus');
+            
+            if (timerDisplay) {
+                timerDisplay.textContent = formatTime(timerState.remaining);
+            }
+            
+            if (timerLabel) {
+                timerLabel.textContent = timerState.phase === 'focus' ? 'Focus Timer' : 'Rest Timer';
+            }
+            
+            if (timerStatus) {
+                if (timerState.isRunning) {
+                    timerStatus.textContent = timerState.phase === 'focus' 
+                        ? 'Focusing... Stay productive!' 
+                        : 'Taking a break... Relax!';
+                } else {
+                    timerStatus.textContent = 'Timer stopped';
                 }
             }
         }
         
-        function startTimer(type, cardId) {
-            if (activeTimer) {
-                clearInterval(timers[activeTimer].interval);
-                document.getElementById(activeTimer + 'Card').classList.remove('active');
-            }
+        async function sendTimerNotification(title, body) {
+            console.log('Attempting to send timer notification:', title, body);
             
-            activeTimer = type;
-            document.getElementById(cardId).classList.add('active');
-            
-            timers[type].interval = setInterval(() => {
-                timers[type].remaining--;
-                updateDisplay(type);
-                
-                if (timers[type].remaining <= 0) {
-                    clearInterval(timers[type].interval);
-                    document.getElementById(cardId).classList.remove('active');
-                    activeTimer = null;
-                    
-                    if (type === 'pomodoro') {
-                        stats.completedPomodoros++;
-                        stats.totalFocusTime += 25;
-                        stats.currentStreak++;
-                        updateStats();
-                        sendTimerNotification('🧪 Potion Complete!', 'Your focus potion is ready! Time for a break.');
-                    } else {
-                        sendTimerNotification('✨ Break Finished!', 'Ready to brew another potion?');
+            // Try NotificationManager first
+            if (window.NotificationManager) {
+                try {
+                    // Ensure NotificationManager is initialized
+                    if (!window.NotificationManager.isInitialized) {
+                        await window.NotificationManager.initialize();
                     }
                     
-                    alert(`${type === 'pomodoro' ? '🧪 Potion complete!' : '✨ Break finished!'}`);
-                    resetTimer(type);
+                    // Check permission
+                    const permission = window.NotificationManager.getPermission();
+                    if (permission !== 'granted') {
+                        const newPermission = await window.NotificationManager.requestPermission();
+                        if (newPermission !== 'granted') {
+                            console.warn('Notification permission not granted');
+                            // Fall through to direct Notification API
+                        } else {
+                            // Permission granted, send via NotificationManager
+                            await window.NotificationManager.sendNotification(title, {
+                                body: body,
+                                tag: 'timer-notification',
+                                vibrate: [200, 100, 200]
+                            });
+                            console.log('Timer notification sent via NotificationManager:', title);
+                            return;
+                        }
+                    } else {
+                        // Permission already granted, send via NotificationManager
+                        await window.NotificationManager.sendNotification(title, {
+                            body: body,
+                            tag: 'timer-notification',
+                            vibrate: [200, 100, 200]
+                        });
+                        console.log('Timer notification sent via NotificationManager:', title);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error sending timer notification via NotificationManager:', error);
+                    // Fall through to fallback
+                }
+            }
+            
+            // Fallback: try direct Notification API
+            if ('Notification' in window) {
+                try {
+                    if (Notification.permission === 'granted') {
+                        new Notification(title, {
+                            body: body,
+                            tag: 'timer-notification',
+                            vibrate: [200, 100, 200]
+                        });
+                        console.log('Timer notification sent via direct Notification API:', title);
+                    } else if (Notification.permission === 'default') {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            new Notification(title, {
+                                body: body,
+                                tag: 'timer-notification',
+                                vibrate: [200, 100, 200]
+                            });
+                            console.log('Timer notification sent via direct Notification API (after permission):', title);
+                        }
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback notification also failed:', fallbackError);
+                }
+            } else {
+                console.error('Notifications not supported in this browser');
+            }
+        }
+        
+        function resetNotificationFlags() {
+            timerState.notificationsSent = {
+                timerStarted: false,
+                restStarting10s: false,
+                restStarted: false,
+                restEnding5s: false,
+                restEnded: false,
+                timerComplete: false
+            };
+        }
+        
+        function startNextFocusSession() {
+            // Calculate how much focus time we still need
+            const remainingFocusNeeded = timerState.totalFocusSeconds - timerState.totalFocusAccumulated;
+            
+            // Determine how long this focus session should be
+            const thisSessionDuration = Math.min(remainingFocusNeeded, timerState.focusIntervalSeconds);
+            
+            if (thisSessionDuration <= 0) {
+                // We've completed all focus time, finish the timer
+                if (!timerState.notificationsSent.timerComplete) {
+                    timerState.notificationsSent.timerComplete = true;
+                    sendTimerNotification('🎉 Timer Cycle Complete!', `You've completed ${timerState.totalFocusSeconds} seconds of focused work! Great job!`);
+                }
+                stopTimer();
+                return;
+            }
+            
+            // Start focus session
+            timerState.phase = 'focus';
+            timerState.remaining = thisSessionDuration;
+            timerState.notificationsSent.restStarting10s = false; // Reset for this session
+            updateTimerDisplay();
+        }
+        
+        function startBreak() {
+            timerState.phase = 'rest';
+            timerState.remaining = timerState.breakDurationSeconds;
+            timerState.notificationsSent.restEnding5s = false; // Reset for this break
+            updateTimerDisplay();
+        }
+        
+        function startTimer() {
+            // Show timer section
+            const timerSection = document.getElementById('timerSection');
+            if (timerSection) {
+                timerSection.classList.remove('hidden');
+            }
+            
+            // Reset timer state
+            resetNotificationFlags();
+            timerState.isRunning = true;
+            timerState.totalFocusAccumulated = 0;
+            
+            // Send notification when timer starts
+            if (!timerState.notificationsSent.timerStarted) {
+                timerState.notificationsSent.timerStarted = true;
+                sendTimerNotification('⏰ Timer Started!', `Focusing for ${timerState.totalFocusSeconds} seconds with ${timerState.breakDurationSeconds} second breaks every ${timerState.focusIntervalSeconds} seconds!`);
+            }
+            
+            // Start first focus session
+            startNextFocusSession();
+            
+            // Start countdown
+            timerState.interval = setInterval(() => {
+                if (timerState.remaining > 0) {
+                    timerState.remaining--;
+                }
+                updateTimerDisplay();
+                
+                // Handle focus phase
+                if (timerState.phase === 'focus') {
+                    // Track accumulated focus time (only when actually focusing)
+                    timerState.totalFocusAccumulated++;
+                    
+                    // 10 seconds before rest period starts
+                    if (timerState.remaining === 10 && !timerState.notificationsSent.restStarting10s) {
+                        timerState.notificationsSent.restStarting10s = true;
+                        sendTimerNotification('⏳ Rest Starting Soon!', 'Your break will begin in 10 seconds!');
+                    }
+                    
+                    // When focus session ends (when remaining reaches 0)
+                    if (timerState.remaining === 0) {
+                        // Check if we've completed total focus time
+                        if (timerState.totalFocusAccumulated >= timerState.totalFocusSeconds) {
+                            // Completed all focus time, finish
+                            if (!timerState.notificationsSent.timerComplete) {
+                                timerState.notificationsSent.timerComplete = true;
+                                sendTimerNotification('🎉 Timer Cycle Complete!', `You've completed ${timerState.totalFocusSeconds} seconds of focused work! Great job!`);
+                            }
+                            stopTimer();
+                            return;
+                        }
+                        
+                        // Send notification when rest starts (reset flag so it can fire for each break)
+                        timerState.notificationsSent.restStarted = false;
+                        sendTimerNotification('🌿 Rest Period Started!', `Time for a ${timerState.breakDurationSeconds} second break!`);
+                        timerState.notificationsSent.restStarted = true;
+                        
+                        // Reset rest ending notification flag for this break
+                        timerState.notificationsSent.restEnding5s = false;
+                        
+                        // Start break
+                        startBreak();
+                    }
+                }
+                // Handle rest phase
+                else if (timerState.phase === 'rest') {
+                    // 5 seconds before rest ends
+                    if (timerState.remaining === 5 && !timerState.notificationsSent.restEnding5s) {
+                        timerState.notificationsSent.restEnding5s = true;
+                        sendTimerNotification('⏳ Break Ending Soon!', 'Your break will end in 5 seconds! Get ready to focus!');
+                    }
+                    
+                    // When rest ends (when remaining reaches 0)
+                    if (timerState.remaining === 0) {
+                        // Send notification when rest ends (reset flag so it can fire for each break)
+                        timerState.notificationsSent.restEnded = false;
+                        sendTimerNotification('✨ Break Finished!', 'Break complete! Ready to get back to work!');
+                        timerState.notificationsSent.restEnded = true;
+                        
+                        // Reset notification flags for next focus cycle
+                        timerState.notificationsSent.restStarting10s = false;
+                        
+                        // Start next focus session
+                        startNextFocusSession();
+                    }
                 }
             }, 1000);
         }
         
-        function startPomodoro() {
-            startTimer('pomodoro', 'pomodoroCard');
-        }
-        
-        function startShortBreak() {
-            startTimer('shortBreak', 'shortBreakCard');
-        }
-        
-        function startLongBreak() {
-            startTimer('longBreak', 'longBreakCard');
-        }
-        
-        function resetTimer(type) {
-            if (timers[type].interval) {
-                clearInterval(timers[type].interval);
-                document.getElementById(type + 'Card').classList.remove('active');
-                if (activeTimer === type) activeTimer = null;
+        function stopTimer() {
+            if (timerState.interval) {
+                clearInterval(timerState.interval);
+                timerState.interval = null;
             }
-            timers[type].remaining = timers[type].duration;
-            updateDisplay(type);
+            timerState.isRunning = false;
+            updateTimerDisplay();
         }
         
-        function updateStats() {
-            document.getElementById('completedPomodoros').textContent = stats.completedPomodoros;
-            const hours = Math.floor(stats.totalFocusTime / 60);
-            const mins = stats.totalFocusTime % 60;
-            document.getElementById('totalFocusTime').textContent = `${hours}h ${mins}m`;
-            document.getElementById('currentStreak').textContent = stats.currentStreak;
+        function parseFocusBreakParams(text) {
+            // Parse focus_time, break_duration, break_frequency from Gemini JSON response
+            // All values are in seconds as returned by Gemini
+            
+            let focusTime = null; // total focus time in seconds
+            let breakDuration = null; // break duration in seconds
+            let breakFrequency = null; // break frequency (interval) in seconds
+            
+            // Try JSON first (most reliable) - Gemini returns JSON with these exact keys
+            try {
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    // Gemini uses these exact keys: focus_time, break_duration, break_frequency (all in seconds)
+                    focusTime = parsed.focus_time || parsed.focus_duration || parsed.focus_period || parsed.focus;
+                    breakDuration = parsed.break_duration || parsed.rest_duration || parsed.rest_time || parsed.break_time || parsed.rest;
+                    breakFrequency = parsed.break_frequency || parsed.break_interval || parsed.repeat_interval || parsed.check_interval || parsed.interval;
+                }
+            } catch (e) {
+                console.log('Failed to parse JSON:', e);
+            }
+            
+            // Fallback: if we still don't have values, try to extract numbers
+            // Assume Gemini returns in order: focus_time (seconds), break_duration (seconds), break_frequency (seconds)
+            if (!focusTime || !breakDuration || !breakFrequency) {
+                const numbers = text.match(/\b(\d+)\b/g);
+                if (numbers && numbers.length >= 3) {
+                    if (!focusTime) {
+                        focusTime = parseInt(numbers[0]);
+                    }
+                    if (!breakDuration) {
+                        breakDuration = parseInt(numbers[1]);
+                    }
+                    if (!breakFrequency) {
+                        breakFrequency = parseInt(numbers[2]);
+                    }
+                }
+            }
+            
+            console.log('Parsed values (all in seconds):', { focusTime, breakDuration, breakFrequency, rawText: text });
+            
+            // Return parsed values - ALL IN SECONDS
+            return {
+                focusTime: focusTime, // total focus time in seconds
+                breakDuration: breakDuration, // break duration in seconds
+                breakFrequency: breakFrequency  // break frequency (interval) in seconds
+            };
         }
 
         async function submitQuery() {
@@ -655,13 +525,14 @@
             const submitBtn = document.getElementById('submitBtn');
             
             if (!query) {
-                output.textContent = 'The mirror needs a question to answer! 🪞';
+                output.textContent = 'Please enter a query first.';
                 output.className = 'output-box error';
                 return;
             }
             
+            // Disable button and show loading
             submitBtn.disabled = true;
-            output.textContent = 'The magic mirror is consulting the ancient scrolls...';
+            output.textContent = 'Processing your query...';
             output.className = 'output-box loading';
             
             try {
@@ -676,49 +547,77 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    output.textContent = data.response;
+                    const geminiResponse = data.response;
+                    output.textContent = geminiResponse;
                     output.className = 'output-box';
                     
-                    // Send success notification
-                    if (window.NotificationManager) {
+                    // Parse focus_time, break_duration, break_frequency from Gemini response (all in seconds)
+                    const params = parseFocusBreakParams(geminiResponse);
+                    
+                    if (params.focusTime && params.breakDuration && params.breakFrequency) {
+                        // Set timer parameters (all in seconds)
+                        timerState.totalFocusSeconds = params.focusTime;
+                        timerState.breakDurationSeconds = params.breakDuration;
+                        timerState.focusIntervalSeconds = params.breakFrequency;
+                        
+                        console.log(`Parsed timer params: focusTime=${params.focusTime}s, breakDuration=${params.breakDuration}s, breakFrequency=${params.breakFrequency}s`);
+                        
+                        // Start the timer with the parsed parameters
+                        if (!timerState.isRunning) {
+                            startTimer();
+                        } else {
+                            // If timer is already running, restart with new parameters
+                            stopTimer();
+                            startTimer();
+                        }
+                    } else {
+                        console.log('Could not parse all timer parameters from Gemini response:', params);
+                        console.log('Expected format: focus for X minutes with Y second breaks every Z minutes');
+                    }
+                    
+                    // Send a notification when query is successfully processed
+                    if (window.sendNotification) {
                         try {
-                            await window.NotificationManager.sendNotification('🔮 Magic Mirror Spoke!', {
-                                body: 'Your answer has been revealed!',
-                                tag: 'query-success'
+                            await window.sendNotification('Query Processed', {
+                                body: 'Your query has been successfully processed!',
+                                tag: 'query-success',
+                                data: { query: query }
                             });
-                        } catch (error) {
-                            console.log('Could not send notification:', error);
+                        } catch (notifError) {
+                            console.log('Could not send notification:', notifError);
                         }
                     }
                 } else {
-                    output.textContent = '⚠️ Spell failed: ' + (data.detail || data.error || 'Unknown magic interference!');
+                    output.textContent = 'Error: ' + (data.detail || data.error || 'Unknown error occurred');
                     output.className = 'output-box error';
                     
                     // Send error notification
-                    if (window.NotificationManager) {
+                    if (window.sendNotification) {
                         try {
-                            await window.NotificationManager.sendNotification('⚠️ Spell Failed', {
-                                body: 'The magic mirror encountered an error.',
-                                tag: 'query-error'
+                            await window.sendNotification('Query Error', {
+                                body: 'An error occurred while processing your query.',
+                                tag: 'query-error',
+                                data: { error: data.detail || data.error }
                             });
-                        } catch (error) {
-                            console.log('Could not send notification:', error);
+                        } catch (notifError) {
+                            console.log('Could not send notification:', notifError);
                         }
                     }
                 }
             } catch (error) {
-                output.textContent = '🔌 Connection lost to the magic realm! Make sure the potion server is bubbling.\n\n' + error.message;
+                output.textContent = 'Error: Failed to connect to server. Make sure the Python backend is running.\n\n' + error.message;
                 output.className = 'output-box error';
                 
                 // Send connection error notification
-                if (window.NotificationManager) {
+                if (window.sendNotification) {
                     try {
-                        await window.NotificationManager.sendNotification('🔌 Connection Lost', {
-                            body: 'Cannot connect to the magic realm!',
-                            tag: 'connection-error'
+                        await window.sendNotification('Connection Error', {
+                            body: 'Failed to connect to server. Make sure the backend is running.',
+                            tag: 'connection-error',
+                            data: { error: error.message }
                         });
-                    } catch (error) {
-                        console.log('Could not send notification:', error);
+                    } catch (notifError) {
+                        console.log('Could not send notification:', notifError);
                     }
                 }
             } finally {
@@ -726,6 +625,7 @@
             }
         }
         
+        // Allow Enter key to submit (Ctrl+Enter for new line)
         document.getElementById('queryInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
                 e.preventDefault();
