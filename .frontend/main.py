@@ -280,6 +280,99 @@ async def get_sessions():
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/advice")
+async def get_productivity_advice(sessions_data: dict):
+    """Get productivity advice from Gemini based on all session data."""
+    try:
+        import sys
+        import os
+        
+        # Add backend to path to import Gemini model
+        backend_path = os.path.join(os.path.dirname(__file__), '..', '.backend')
+        if backend_path not in sys.path:
+            sys.path.insert(0, backend_path)
+        
+        # Import Gemini model from backend
+        import google.generativeai as genai
+        genai.configure(api_key="AIzaSyB8YWnoZe-Ry3_eFp8yYlvRCgd6_aY1YoA")
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
+        
+        sessions = sessions_data.get("sessions", [])
+        
+        if not sessions:
+            return {
+                "advice": "No session data available yet. Complete a few focus sessions to get personalized productivity advice!",
+                "error": False
+            }
+        
+        # Format session data for Gemini
+        session_summary = []
+        total_emotions = {
+            "angry": 0,
+            "stressed": 0,
+            "happy": 0,
+            "sad": 0,
+            "focused": 0
+        }
+        total_distractions = 0
+        
+        for i, session in enumerate(sessions, 1):
+            session_summary.append(
+                f"Session {i}: "
+                f"Angry={session.get('angry', 0)}, "
+                f"Stressed={session.get('stressed', 0)}, "
+                f"Happy={session.get('happy', 0)}, "
+                f"Sad={session.get('sad', 0)}, "
+                f"Focused={session.get('focused', 0)}, "
+                f"Distractions={session.get('distractions', 0)}"
+            )
+            total_emotions["angry"] += session.get('angry', 0)
+            total_emotions["stressed"] += session.get('stressed', 0)
+            total_emotions["happy"] += session.get('happy', 0)
+            total_emotions["sad"] += session.get('sad', 0)
+            total_emotions["focused"] += session.get('focused', 0)
+            total_distractions += session.get('distractions', 0)
+        
+        # Create prompt for Gemini
+        prompt = f"""You are a productivity coach analyzing focus session data. Based on the following session data from a focus tracking app, provide specific, actionable advice on how the user can improve their productivity and focus. Respond 1 consise, detailed and insighful 3 sentences without markdown or any fancy typography.
+
+Session Data (Total Sessions: {len(sessions)}):
+{chr(10).join(session_summary)}
+
+Aggregate Totals Across All Sessions:
+- Angry: {total_emotions['angry']}
+- Stressed: {total_emotions['stressed']}
+- Happy: {total_emotions['happy']}
+- Sad: {total_emotions['sad']}
+- Focused: {total_emotions['focused']}
+- Total Distractions: {total_distractions}
+- Average Distractions per Session: {total_distractions / len(sessions):.1f}
+
+Please provide:
+1. A brief analysis of their focus patterns
+2. Specific, actionable recommendations to improve productivity
+3. Suggestions for reducing distractions
+4. Tips for maintaining better emotional state during focus sessions
+
+Keep the advice friendly, encouraging, and practical. Format it in a way that's easy to read with clear sections."""
+        
+        # Get advice from Gemini
+        response = model.generate_content(prompt)
+        advice = response.text
+        
+        return {
+            "advice": advice,
+            "error": False
+        }
+    except Exception as e:
+        print(f"Error getting productivity advice: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "advice": f"Unable to generate advice at this time. Error: {str(e)}",
+            "error": True
+        }
+
 # WebSocket endpoint for video streaming
 @app.websocket("/ws/video")
 async def websocket_video(websocket: WebSocket):

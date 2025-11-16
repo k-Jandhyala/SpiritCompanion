@@ -226,6 +226,27 @@
                     <div class="stat-label" style="color: #db2777;">Best Focus Session!</div>
                 </div>
             </div>
+            
+            <!-- Advice Section -->
+            <div class="card" style="margin-top: 30px;">
+                <h2>💡 Productivity Advice</h2>
+                <div id="adviceLoading" class="loading" style="display: none;">✨ Analyzing your sessions and generating personalized advice... ✨</div>
+                <div id="adviceError" class="error" style="display: none;"></div>
+                <div id="adviceContent" style="
+                    background: linear-gradient(135deg, #ffffff 0%, #fef9e7 100%);
+                    border: 4px solid #8b5cf6;
+                    border-radius: 20px;
+                    padding: 30px;
+                    margin-top: 20px;
+                    color: #5b21b6;
+                    font-size: 1.1em;
+                    line-height: 1.8;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    text-align: left;
+                    display: none;
+                "></div>
+            </div>
         </div>
     </div>
     
@@ -263,6 +284,9 @@
                 // Hide loading, show content
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
+                
+                // Load productivity advice
+                loadProductivityAdvice(data.sessions);
                 
             } catch (error) {
                 console.error('Error loading trends:', error);
@@ -461,6 +485,43 @@
                 ? Math.min(...distractionData.map(d => d.distractions))
                 : 0;
             document.getElementById('bestSession').textContent = bestSession;
+        }
+        
+        // Load productivity advice from Gemini
+        async function loadProductivityAdvice(sessions) {
+            try {
+                // Show loading
+                document.getElementById('adviceLoading').style.display = 'block';
+                document.getElementById('adviceError').style.display = 'none';
+                document.getElementById('adviceContent').style.display = 'none';
+                
+                // Send session data to backend for Gemini analysis
+                const response = await fetch('http://localhost:8000/api/advice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ sessions: sessions })
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading
+                document.getElementById('adviceLoading').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('adviceError').style.display = 'block';
+                    document.getElementById('adviceError').textContent = `❌ ${data.advice}`;
+                } else {
+                    document.getElementById('adviceContent').textContent = data.advice;
+                    document.getElementById('adviceContent').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading advice:', error);
+                document.getElementById('adviceLoading').style.display = 'none';
+                document.getElementById('adviceError').style.display = 'block';
+                document.getElementById('adviceError').textContent = `❌ Error loading advice: ${error.message}`;
+            }
         }
         
         // Load data when page loads
