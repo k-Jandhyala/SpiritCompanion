@@ -33,6 +33,7 @@ cap = None
 video_websocket = None  # WebSocket connection for streaming video
 current_emotion = None
 current_phone_detected = False
+_main_event_loop = None  # Main FastAPI event loop
 
 # ---------------- HELPERS ----------------
 def map_emotion(df_emotion):
@@ -136,16 +137,53 @@ def start_emotion_detection():
 
     init_db()
 
-    cap = cv2.VideoCapture(0)
+    # Try to open camera - try multiple indices
+    cap = None
+    for camera_index in [0, 1, 2]:
+        print(f"Attempting to open camera index {camera_index}...")
+        test_cap = cv2.VideoCapture(camera_index)
+        if test_cap.isOpened():
+            # Test if we can actually read a frame
+            ret, test_frame = test_cap.read()
+            if ret and test_frame is not None:
+                cap = test_cap
+                print(f"✅ Successfully opened camera index {camera_index}")
+                break
+            else:
+                test_cap.release()
+                print(f"❌ Camera index {camera_index} opened but cannot read frames")
+        else:
+            print(f"❌ Could not open camera index {camera_index}")
+    
+    if cap is None or not cap.isOpened():
+        print("❌ Error: Could not open any camera")
+        running = False
+        session_active = False
+        return
+    
+    # Set camera properties for better performance
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    
     running = True
     session_active = True
+    print("✅ Emotion detection started, waiting for WebSocket connection...")
 
+    frame_count = 0
     while running:
         ret, frame = cap.read()
-        if not ret:
-            # If camera fails, stop and save
-            stop_emotion_detection()
-            break
+        if not ret or frame is None:
+            print(f"⚠️ Failed to read frame from camera (attempt {frame_count})")
+            frame_count += 1
+            if frame_count > 10:
+                print("❌ Camera stopped providing frames, stopping detection")
+                stop_emotion_detection()
+                break
+            time.sleep(0.1)  # Wait a bit before retrying
+            continue
+        
+        frame_count = 0  # Reset counter on successful read
 
         # ---------------- EMOTION DETECTION ----------------
         try:
@@ -224,9 +262,21 @@ def start_emotion_detection():
         # Stream frame to WebSocket if connected
         if video_websocket is not None:
             try:
+                # Check if frame is valid
+                if frame is None or frame.size == 0:
+                    print("⚠️ Invalid frame, skipping")
+                    continue
+                
                 # Encode frame as JPEG
-                _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                success, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                if not success or buffer is None:
+                    print("⚠️ Failed to encode frame as JPEG")
+                    continue
+                    
                 frame_base64 = base64.b64encode(buffer).decode('utf-8')
+                if not frame_base64:
+                    print("⚠️ Failed to encode frame to base64")
+                    continue
                 
                 # Send frame and classification data
                 import asyncio
@@ -240,19 +290,33 @@ def start_emotion_detection():
                 }
                 
                 # Send via WebSocket (need to handle async)
-                loop = None
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    pass
+                # Use the main event loop from FastAPI
+                loop = _main_event_loop
+                if loop is None:
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        print("⚠️ No event loop available for sending video frames")
+                        return
                 
                 if loop and loop.is_running():
-                    asyncio.run_coroutine_threadsafe(
-                        _send_video_frame(video_websocket, json.dumps(message)),
-                        loop
-                    )
+                    # Use run_coroutine_threadsafe to send from background thread
+                    try:
+                        future = asyncio.run_coroutine_threadsafe(
+                            _send_video_frame(video_websocket, json.dumps(message)),
+                            loop
+                        )
+                        # Don't wait for result to avoid blocking, but check for exceptions
+                        # future.result(timeout=0.1)  # Quick check if it failed immediately
+                    except Exception as e:
+                        print(f"⚠️ Error scheduling frame send: {e}")
+                else:
+                    if video_websocket is not None:
+                        print(f"⚠️ Event loop is not running (loop={loop}), cannot send video frame")
             except Exception as e:
                 print(f"Error sending video frame: {e}")
+                import traceback
+                traceback.print_exc()
 
         # Don't show cv2 window if streaming to web
         # cv2.imshow("Spirit Companion - Emotion + Distraction", frame)
@@ -274,6 +338,17 @@ def set_video_websocket(websocket):
     """Set the WebSocket connection for video streaming."""
     global video_websocket
     video_websocket = websocket
+    if websocket is not None:
+        print("✅ Video WebSocket registered in EmotionDetection")
+    else:
+        print("❌ Video WebSocket cleared in EmotionDetection")
+
+def set_event_loop(loop):
+    """Set the main event loop for async operations."""
+    global _main_event_loop
+    _main_event_loop = loop
+    if loop is not None:
+        print("✅ Event loop set in EmotionDetection")
 
 
 def stop_emotion_detection():

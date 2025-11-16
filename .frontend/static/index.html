@@ -494,9 +494,9 @@
         <div class="timer-section">
             <div id="timerCard" class="timer-card">
                 <div class="timer-icon" id="timerIcon">⏱️</div>
-                <div class="timer-label" id="timerLabel">Focus Timer</div>
+            <div class="timer-label" id="timerLabel">Focus Timer</div>
                 <div class="timer-display" id="timerDisplay">00:00</div>
-                <div class="timer-status" id="timerStatus">Timer will start when you submit a query</div>
+            <div class="timer-status" id="timerStatus">Timer will start when you submit a query</div>
                 <div>
                     <button class="timer-btn stop" onclick="stopTimer()" id="stopBtn" style="display: none;">Stop Timer</button>
                 </div>
@@ -559,7 +559,7 @@
             <div id="output" class="output-box">The magic mirror awaits your question...</div>
         </div>
     </div>
-    
+
     <!-- Notification Utilities -->
     <script src="/notification-utils.js"></script>
     
@@ -668,13 +668,29 @@
                                 statusEl.style.color = '#10b981';
                             }
                             
+                            // Check if frame data exists
+                            if (!message.frame) {
+                                console.warn('Received video frame message but no frame data');
+                                return;
+                            }
+                            
                             // Display frame
                             const img = new Image();
+                            img.onerror = (e) => {
+                                console.error('Error loading image from base64:', e);
+                                const statusEl = document.getElementById('cameraStatus');
+                                if (statusEl) {
+                                    statusEl.textContent = '⚠️ Error loading frame';
+                                    statusEl.style.color = '#ef4444';
+                                }
+                            };
                             img.onload = () => {
                                 if (videoCanvas && videoCtx) {
                                     videoCanvas.width = img.width;
                                     videoCanvas.height = img.height;
                                     videoCtx.drawImage(img, 0, 0);
+                                } else {
+                                    console.warn('Video canvas or context not available');
                                 }
                             };
                             img.src = 'data:image/jpeg;base64,' + message.frame;
@@ -832,11 +848,11 @@
                         }
                     }
                     
-                    await window.NotificationManager.sendNotification(title, {
-                        body: body,
-                        tag: 'timer-notification',
-                        vibrate: [200, 100, 200]
-                    });
+                        await window.NotificationManager.sendNotification(title, {
+                            body: body,
+                            tag: 'timer-notification',
+                            vibrate: [200, 100, 200]
+                        });
                     console.log('Timer notification sent:', title);
                 } catch (error) {
                     console.error('Error sending timer notification:', error);
@@ -1014,7 +1030,7 @@
                 breakFrequency: breakFrequency
             };
         }
-        
+
         async function submitQuery() {
             const query = document.getElementById('queryInput').value.trim();
             const output = document.getElementById('output');

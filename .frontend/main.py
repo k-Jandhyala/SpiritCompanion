@@ -31,14 +31,27 @@ notification_sender_spec.loader.exec_module(notification_sender)
 
 app = FastAPI(title="Gemini Test API")
 
+# Store the event loop for use in threads
+_main_event_loop = None
+
 # Set the event loop for NotificationSender to use from threads
 @app.on_event("startup")
 async def startup_event():
     import asyncio
+    global _main_event_loop
     try:
         loop = asyncio.get_event_loop()
+        _main_event_loop = loop
         notification_sender.set_event_loop(loop)
-        print("Event loop set for NotificationSender")
+        
+        # Also set event loop for EmotionDetection
+        try:
+            from EmotionDetection import set_event_loop as set_emotion_loop
+            set_emotion_loop(loop)
+        except:
+            pass
+        
+        print("Event loop set for NotificationSender and EmotionDetection")
     except Exception as e:
         print(f"Error setting event loop: {e}")
 
@@ -216,7 +229,17 @@ async def websocket_video(websocket: WebSocket):
     
     await websocket.accept()
     set_video_websocket(websocket)
-    print(f"✅ Video WebSocket client connected")
+    print(f"✅ Video WebSocket client connected and registered")
+    
+    # Check if emotion detection is running and inform it
+    try:
+        from EmotionDetection import running as emotion_running
+        if emotion_running:
+            print("✅ Emotion detection is running, video streaming should start now")
+        else:
+            print("⚠️ Emotion detection is not running yet")
+    except:
+        pass
     
     try:
         # Keep connection alive
