@@ -109,8 +109,7 @@ def get_gemini_response(query: str) -> str:
         focus_settings["break_frequency"]  # Note: RepeatTime is break_frequency
     )
     
-    # Optionally start the timer automatically
-    # Uncomment the line below if you want the timer to start automatically
-    # startFocusRestTimer()
+    # Start the timer automatically when Gemini updates the times
+    startFocusRestTimer()
     
     return gemini_output
