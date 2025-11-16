@@ -12,6 +12,20 @@ except ImportError:
         print(f"Notification: {title} - {body}")
     print("Warning: NotificationSender not available, notifications will be printed to console")
 
+# Import EmotionDetection to stop when timer completes and start when timer begins
+try:
+    from EmotionDetection import stop_emotion_detection, start_emotion_detection
+    print("✅ Successfully imported stop_emotion_detection and start_emotion_detection")
+except ImportError as e:
+    # Fallback if EmotionDetection is not available
+    print(f"⚠️ Warning: Could not import EmotionDetection: {e}")
+    def stop_emotion_detection():
+        print("⚠️ stop_emotion_detection called but EmotionDetection not available")
+        pass
+    def start_emotion_detection():
+        print("⚠️ start_emotion_detection called but EmotionDetection not available")
+        pass
+
 FocusTime = 0
 RestTime = 0
 RepeatTime = 0
@@ -187,6 +201,12 @@ def _run_timer():
                     f"You've completed {FocusTime} seconds of focused work! Great job!",
                     tag="timer-complete"
                 )
+                # Stop emotion detection when timer completes
+                try:
+                    stop_emotion_detection()
+                    print("✅ Emotion detection stopped on timer completion")
+                except Exception as e:
+                    print(f"⚠️ Error stopping emotion detection on timer completion: {e}")
             break
         
         # REST PHASE - only if there's still focus time remaining
@@ -249,6 +269,13 @@ def _run_timer():
     timer_state["is_running"] = False
     timer_state["phase"] = None
     _timer_stop_event.clear()
+    
+    # Ensure emotion detection is stopped when timer ends
+    try:
+        stop_emotion_detection()
+        print("✅ Emotion detection stopped when timer ended")
+    except Exception as e:
+        print(f"⚠️ Error stopping emotion detection when timer ended: {e}")
 
 
 def startFocusRestTimer():

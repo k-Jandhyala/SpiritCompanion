@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Potion Trends Laboratory</title>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/dist/Recharts.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', cursive;
+            background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 50%, #34d399 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .sparkle {
+            position: absolute;
+            font-size: 40px;
+            animation: sparkle 3s ease-in-out infinite;
+        }
+        
+        .sparkle-1 { top: 10%; left: 15%; animation-delay: 0s; }
+        .sparkle-2 { top: 20%; right: 15%; animation-delay: 0.5s; }
+        .sparkle-3 { bottom: 15%; left: 20%; animation-delay: 1s; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 5px solid #f59e0b;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.5);
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #b45309;
+            font-size: 2.8em;
+            text-shadow: 3px 3px 0px #fbbf24;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+        }
+        
+        .header p {
+            color: #d97706;
+            font-style: italic;
+            font-size: 1.1em;
+            margin: 0;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 5px solid #f59e0b;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .card h2 {
+            color: #b45309;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px #fbbf24;
+        }
+        
+        .chart-container {
+            background: linear-gradient(135deg, #ffffff 0%, #fef9e7 100%);
+            border: 5px solid #10b981;
+            border-radius: 25px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fef9e7 100%);
+            border: 4px solid #10b981;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+        
+        .stat-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            color: #047857;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #059669;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #d97706;
+            font-size: 1.5em;
+            padding: 40px;
+        }
+        
+        .error {
+            text-align: center;
+            color: #ef4444;
+            font-size: 1.2em;
+            padding: 40px;
+            background: #fee2e2;
+            border: 4px solid #ef4444;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sparkle sparkle-1">✨</div>
+    <div class="sparkle sparkle-2">⭐</div>
+    <div class="sparkle sparkle-3">💫</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📊 Potion Trends Laboratory 📊</h1>
+            <p>~ Track Your Magical Progress ~</p>
+        </div>
+        
+        <div id="loading" class="loading">✨ Loading your magical progress... ✨</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="content" style="display: none;">
+            <!-- Most Common Emotion Card -->
+            <div class="card" id="mostCommonEmotionCard">
+                <h2>🏆 Most Common Emotion</h2>
+                <div id="mostCommonEmotionIcon" style="font-size: 5em; margin-bottom: 15px;"></div>
+                <div id="mostCommonEmotionName" style="font-size: 2em; color: #d97706; font-weight: bold; margin-bottom: 10px;"></div>
+                <div id="mostCommonEmotionCount" style="font-size: 1.5em; color: #78350f; font-weight: bold;"></div>
+            </div>
+            
+            <!-- Charts Container -->
+            <div class="charts-grid">
+                <!-- Emotions Bar Chart -->
+                <div class="chart-container">
+                    <h2 style="color: #047857; font-size: 1.8em; margin-bottom: 20px; text-align: center; text-shadow: 2px 2px 0px rgba(16, 185, 129, 0.2);">🎭 Emotion Potion Tracker</h2>
+                    <div id="emotionChart" style="width: 100%; height: 350px;"></div>
+                </div>
+                
+                <!-- Distractions Line Chart -->
+                <div class="chart-container" style="border-color: #3b82f6; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <h2 style="color: #1e40af; font-size: 1.8em; margin-bottom: 20px; text-align: center; text-shadow: 2px 2px 0px rgba(59, 130, 246, 0.2);">⚠️ Distraction Dragon Tracker</h2>
+                    <div id="distractionChart" style="width: 100%; height: 350px;"></div>
+                </div>
+            </div>
+            
+            <!-- Stats Summary -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="totalEmotions">0</div>
+                    <div class="stat-label">Total Emotions Tracked</div>
+                </div>
+                
+                <div class="stat-card" style="border-color: #3b82f6; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="avgDistractions" style="color: #1e40af;">0</div>
+                    <div class="stat-label" style="color: #2563eb;">Avg Distractions/Session</div>
+                </div>
+                
+                <div class="stat-card" style="border-color: #f59e0b; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="totalSessions" style="color: #b45309;">0</div>
+                    <div class="stat-label" style="color: #d97706;">Total Sessions</div>
+                </div>
+                
+                <div class="stat-card" style="border-color: #ec4899; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="bestSession" style="color: #be185d;">0</div>
+                    <div class="stat-label" style="color: #db2777;">Best Focus Session!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Emotion mapping
+        const emotionMap = {
+            'angry': { name: 'Angry', emoji: '😠', color: '#ef4444' },
+            'stressed': { name: 'Stressed', emoji: '😰', color: '#f59e0b' },
+            'happy': { name: 'Happy', emoji: '😊', color: '#10b981' },
+            'sad': { name: 'Sad', emoji: '😢', color: '#3b82f6' },
+            'focused': { name: 'Focused', emoji: '🤔', color: '#8b5cf6' }
+        };
+        
+        const emotionColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+        
+        // Fetch session data from API
+        async function loadTrendsData() {
+            try {
+                const response = await fetch('http://localhost:8000/api/sessions');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to fetch sessions');
+                }
+                
+                if (data.sessions.length === 0) {
+                    document.getElementById('loading').textContent = '✨ No sessions found yet. Complete a focus session to see your trends! ✨';
+                    return;
+                }
+                
+                // Process session data
+                processSessionData(data.sessions);
+                
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading trends:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `❌ Error loading trends: ${error.message}`;
+            }
+        }
+        
+        function processSessionData(sessions) {
+            // Aggregate emotion counts across all sessions
+            const emotionTotals = {
+                angry: 0,
+                stressed: 0,
+                happy: 0,
+                sad: 0,
+                focused: 0
+            };
+            
+            sessions.forEach(session => {
+                emotionTotals.angry += session.angry || 0;
+                emotionTotals.stressed += session.stressed || 0;
+                emotionTotals.happy += session.happy || 0;
+                emotionTotals.sad += session.sad || 0;
+                emotionTotals.focused += session.focused || 0;
+            });
+            
+            // Prepare emotion data for chart
+            const emotionData = Object.entries(emotionTotals)
+                .map(([emotion, count]) => ({
+                    emotion: `${emotionMap[emotion].emoji} ${emotionMap[emotion].name}`,
+                    count: count
+                }))
+                .filter(item => item.count > 0)
+                .sort((a, b) => b.count - a.count);
+            
+            // Prepare distraction data for chart
+            const distractionData = sessions.map((session, index) => ({
+                session: `Session ${sessions.length - index}`,
+                distractions: session.distractions || 0
+            })).reverse();
+            
+            // Find most common emotion
+            const mostCommon = emotionData.length > 0 
+                ? emotionData[0] 
+                : { emotion: '😊 Happy', count: 0 };
+            
+            // Update UI
+            updateMostCommonEmotion(mostCommon);
+            createEmotionChart(emotionData);
+            createDistractionChart(distractionData);
+            updateStats(emotionData, distractionData);
+        }
+        
+        function updateMostCommonEmotion(emotion) {
+            const parts = emotion.emotion.split(' ');
+            document.getElementById('mostCommonEmotionIcon').textContent = parts[0];
+            document.getElementById('mostCommonEmotionName').textContent = parts.slice(1).join(' ');
+            document.getElementById('mostCommonEmotionCount').textContent = 
+                `Felt ${emotion.count} times across all sessions! 🎉`;
+        }
+        
+        function createEmotionChart(emotionData) {
+            const ctx = document.createElement('canvas');
+            document.getElementById('emotionChart').appendChild(ctx);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: emotionData.map(e => e.emotion),
+                    datasets: [{
+                        label: 'Times Felt',
+                        data: emotionData.map(e => e.count),
+                        backgroundColor: emotionData.map((_, i) => emotionColors[i % emotionColors.length]),
+                        borderRadius: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#fef3c7',
+                            borderColor: '#f59e0b',
+                            borderWidth: 3,
+                            borderRadius: 15,
+                            titleFont: { family: 'Comic Sans MS', size: 14, weight: 'bold' },
+                            bodyFont: { family: 'Comic Sans MS', size: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { family: 'Comic Sans MS', size: 14 },
+                                color: '#047857'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Times Felt',
+                                font: { family: 'Comic Sans MS', size: 14, weight: 'bold' },
+                                color: '#047857'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Comic Sans MS', size: 12 },
+                                color: '#047857',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createDistractionChart(distractionData) {
+            const ctx = document.createElement('canvas');
+            document.getElementById('distractionChart').appendChild(ctx);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: distractionData.map(d => d.session),
+                    datasets: [{
+                        label: 'Distractions',
+                        data: distractionData.map(d => d.distractions),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#1e40af',
+                        pointHoverRadius: 8,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#fef3c7',
+                            borderColor: '#f59e0b',
+                            borderWidth: 3,
+                            borderRadius: 15,
+                            titleFont: { family: 'Comic Sans MS', size: 14, weight: 'bold' },
+                            bodyFont: { family: 'Comic Sans MS', size: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { family: 'Comic Sans MS', size: 14 },
+                                color: '#1e40af'
+                            },
+                            title: {
+                                display: true,
+                                text: '# of Distractions',
+                                font: { family: 'Comic Sans MS', size: 14, weight: 'bold' },
+                                color: '#1e40af'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Comic Sans MS', size: 12 },
+                                color: '#1e40af',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateStats(emotionData, distractionData) {
+            // Total emotions tracked
+            const totalEmotions = emotionData.reduce((sum, e) => sum + e.count, 0);
+            document.getElementById('totalEmotions').textContent = totalEmotions;
+            
+            // Average distractions per session
+            const avgDistractions = distractionData.length > 0
+                ? (distractionData.reduce((sum, d) => sum + d.distractions, 0) / distractionData.length).toFixed(1)
+                : '0';
+            document.getElementById('avgDistractions').textContent = avgDistractions;
+            
+            // Total sessions
+            document.getElementById('totalSessions').textContent = distractionData.length;
+            
+            // Best focus session (lowest distractions)
+            const bestSession = distractionData.length > 0
+                ? Math.min(...distractionData.map(d => d.distractions))
+                : 0;
+            document.getElementById('bestSession').textContent = bestSession;
+        }
+        
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadTrendsData);
+    </script>
+</body>
+</html>
+
